@@ -94,8 +94,8 @@ button {
 }
 
 .total {
-  margin-top:16px;
-  font-size:18px;
+  margin-top:18px;
+  font-size:19px;
   font-weight:bold;
   color:var(--success);
   text-align:center;
@@ -123,18 +123,17 @@ canvas {
 
 <header>
   <h2>🦁 Rateio Rei Leão</h2>
-  <p>Sou um fudido mal pagador. Selecione seu nome para ver quanto deve pagar para cada pessoa.</p>
+  <p>Selecione seu nome e veja quanto deve pagar para cada pessoa 😅</p>
 </header>
 
 <div class="container">
 
-<!-- GRÁFICO -->
+<!-- GRÁFICO DE COMIDAS -->
 <div class="card">
-  <h3>📊 Gastos totais</h3>
-  <canvas id="chart"></canvas>
+  <h3>🍽️ Total gasto com comidas</h3>
+  <canvas id="graficoComidas"></canvas>
 </div>
 
-<!-- SELEÇÃO -->
 <div class="card">
   <h3>🙋 Quem sou eu?</h3>
 
@@ -170,46 +169,25 @@ canvas {
 <div class="toast" id="toast">PIX copiado!</div>
 
 <script>
-const compradores = [
-  {
-    nome:'Vinícius',
-    valor:823.30,
-    pix:'13021329624',
-    desc:'Mesa de frios, queijo coalho, ceviche e prêmios do bingo'
-  },
-  {
-    nome:'Fernando',
-    valor:484.37,
-    pix:'09290342609',
-    desc:'Bingo, farofa e bombom'
-  },
-  {
-    nome:'Gustavo',
-    valor:690.00,
-    pix:'38988398745',
-    desc:'Churrasco'
-  },
-  {
-    nome:'Neto',
-    valor:240.00,
-    pix:'38999501708',
-    desc:'Dogão'
-  },
-  {
-    nome:'V10',
-    valor:122.30,
-    pix:'38988114173',
-    desc:'Carvão, refrigerante e suco'
-  },
-  {
-    nome:'Leo',
-    valor:51.24,
-    pix:'12612297626',
-    desc:'Palha e vinagrete'
-  }
+const pessoasFixas = 20;
+
+const compradoresFixos = [
+  { nome:'Vinícius', comida:823.30, pix:'13021329624', desc:'Mesa de frios, queijo coalho, ceviche e bingo' },
+  { nome:'Fernando', comida:484.37, pix:'09290342609', desc:'Bingo, farofa e bombom' },
+  { nome:'Gustavo', comida:690.00, pix:'38988398745', desc:'Churrasco' },
+  { nome:'Neto', comida:240.00, pix:'38999501708', desc:'Dogão' },
+  { nome:'V10', comida:122.30, pix:'38988114173', desc:'Carvão, refri e suco' },
+  { nome:'Leo', comida:51.24, pix:'12612297626', desc:'Palha e vinagrete' }
 ];
 
-const pessoas = 20;
+const bebidas = {
+  'Leo': { valor:450, desc:'Chopp' },
+  'Gustavo': { valor:312, desc:'Heineken' }
+};
+
+const quemBebeu = [
+  'V10','Vinícius','Neto','Veloso','Gustavo','Leo','Gui Japah','Nunes','João'
+];
 
 function calcular() {
   const pessoa = document.getElementById('pessoa').value;
@@ -218,38 +196,49 @@ function calcular() {
 
   let total = 0;
   let html = '';
+  const bebeu = quemBebeu.includes(pessoa);
 
-  compradores.forEach(c => {
-    const valor = c.valor / pessoas;
-    total += valor;
+  compradoresFixos.forEach(c => {
+    const parteComida = c.comida / pessoasFixas;
+    let valorFinal = parteComida;
+
+    let descricaoExtra = `🍽 ${c.desc}`;
+
+    if (bebeu && bebidas[c.nome]) {
+      const parteBebida = bebidas[c.nome].valor / quemBebeu.length;
+      valorFinal += parteBebida;
+      descricaoExtra += ` + 🍻 ${bebidas[c.nome].desc}`;
+    }
+
+    total += valorFinal;
 
     html += `
       <div class="pay">
-        Pagar <strong>R$ ${valor.toFixed(2).replace('.',',')}</strong> para <strong>${c.nome}</strong>
-        <div class="desc">🛒 ${c.desc}</div>
+        Pagar <strong>R$ ${valorFinal.toFixed(2).replace('.',',')}</strong> para <strong>${c.nome}</strong>
+        <div class="desc">${descricaoExtra}</div>
         <div class="pix">PIX: ${c.pix}</div>
         <button onclick="copiarPix('${c.pix}')">Copiar PIX</button>
       </div>`;
   });
 
-  html += `<div class="total">Total que você deve pagar: R$ ${total.toFixed(2).replace('.',',')}</div>`;
+  html += `<div class="total">💰 Total final: R$ ${total.toFixed(2).replace('.',',')}</div>`;
   div.innerHTML = html;
 }
 
 function copiarPix(pix) {
   navigator.clipboard.writeText(pix);
   const t = document.getElementById('toast');
-  t.style.display = 'block';
+  t.style.display='block';
   setTimeout(()=>t.style.display='none',2000);
 }
 
-// GRÁFICO
-new Chart(document.getElementById('chart'), {
+// GRÁFICO – SOMENTE COMIDAS
+new Chart(document.getElementById('graficoComidas'), {
   type:'bar',
   data:{
-    labels: compradores.map(c=>c.nome),
+    labels: compradoresFixos.map(c=>c.nome),
     datasets:[{
-      data: compradores.map(c=>c.valor),
+      data: compradoresFixos.map(c=>c.comida),
       backgroundColor:'#90caf9'
     }]
   },
